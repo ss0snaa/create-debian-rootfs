@@ -28,22 +28,27 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y debootstrap
+
     - name: Build Debian RootFS
       run: |
         # Create directories
         mkdir -p rootfs
-        cd rootfs
 
         # Debootstrap Debian
-        sudo apt-get update
-        sudo apt-get install -y debootstrap
         sudo debootstrap --arch=amd64 buster ./rootfs http://deb.debian.org/debian/
 
+        # Change ownership to the current user
+        sudo chown -R $USER:$USER ./rootfs
+
         # Copy init script
-        cp ../init ./rootfs/init
+        cp init ./rootfs/init
 
         # Compress rootfs
-        sudo tar -czvf ../debian-rootfs.tar.gz -C ./rootfs .
+        tar -czvf debian-rootfs.tar.gz -C ./rootfs .
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
